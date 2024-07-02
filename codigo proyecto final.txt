@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+
+FILE *fd;
+struct producto {
+    char nombre[50];
+    int cantidad;
+    float precio;
+} datos;
+
+void crear() {
+    char archivo[] = "inventario.txt";
+    char rpt;
+    fd = fopen(archivo, "wb");
+    if (fd == NULL) {
+        printf("Error al ubicar el archivo!!!\n");
+        exit(1);
+    }
+    fprintf(fd, "\t::::::Inventario de Productos para Mascotas:::::\n");
+
+    do {
+        printf("\n\n");
+        printf("Nombre del producto : ");
+        fgets(datos.nombre, 50, stdin);
+        datos.nombre[strcspn(datos.nombre, "\n")] = '\0'; // Eliminar el salto de línea al final
+        printf("Cantidad : ");
+        scanf("%d", &datos.cantidad);
+        printf("Precio : ");
+        scanf("%f", &datos.precio);
+        getchar(); // Consumir el salto de línea restante
+
+        fprintf(fd, "\nProducto : %s\nCantidad : %d\nPrecio : %.2f\n\n", datos.nombre, datos.cantidad, datos.precio);
+        printf("Ingresar más productos : Si(1) - No(0) -> ");
+        scanf("%d", &rpt);
+        getchar(); // Consumir el salto de línea restante
+
+    } while (rpt == 1);
+    fclose(fd);
+}
+
+void agregar() {
+    char archivo[] = "inventario.txt";
+    char rpt;
+    fd = fopen(archivo, "a");
+    if (fd == NULL) {
+        printf("Error al ubicar el archivo!!!\n");
+        exit(1);
+    }
+    fprintf(fd, "\t::::::Añadiendo al Inventario de Productos para Mascotas:::::\n");
+    do {
+        printf("\n\n");
+        printf("Nombre del producto : ");
+        fgets(datos.nombre, 50, stdin);
+        datos.nombre[strcspn(datos.nombre, "\n")] = '\0'; // Eliminar el salto de línea al final
+        printf("Cantidad : ");
+        scanf("%d", &datos.cantidad);
+        printf("Precio : ");
+        scanf("%f", &datos.precio);
+        getchar(); // Consumir el salto de línea restante
+
+        fprintf(fd, "\nProducto : %s\nCantidad : %d\nPrecio : %.2f\n\n", datos.nombre, datos.cantidad, datos.precio);
+        printf("Ingresar más productos : Si(1) - No(0) -> ");
+        scanf("%d", &rpt);
+        getchar(); // Consumir el salto de línea restante
+
+    } while (rpt == 1);
+    fclose(fd);
+}
+
+void visualizar() {
+    int c;
+    char archivo[] = "inventario.txt";
+    fd = fopen(archivo, "r");
+
+    if (fd == NULL) {
+        printf("Error al ubicar el archivo!!!\n");
+        exit(1);
+    }
+
+    while ((c = fgetc(fd)) != EOF) {
+        if (c == '\n') {
+            printf("\n");
+        } else {
+            putchar(c);
+        }
+    }
+    fclose(fd);
+}
+
+void eliminar() {
+    char archivo[] = "inventario.txt";
+    char tempArchivo[] = "temp.txt";
+    char nombreProducto[50];
+    int encontrado = 0;
+
+    printf("Ingrese el nombre del producto a eliminar: ");
+    getchar(); // Consumir el salto de línea restante
+    fgets(nombreProducto, 50, stdin);
+    nombreProducto[strcspn(nombreProducto, "\n")] = '\0'; // Eliminar el salto de línea al final
+
+    fd = fopen(archivo, "r");
+    FILE *tempFd = fopen(tempArchivo, "w");
+
+    if (fd == NULL || tempFd == NULL) {
+        printf("Error al ubicar el archivo!!!\n");
+        exit(1);
+    }
+
+    fprintf(tempFd, "\t::::::Inventario de Productos para Mascotas:::::\n");
+    char buffer[100];
+    while (fgets(buffer, 100, fd) != NULL) {
+        if (sscanf(buffer, "\nProducto : %49[^\n]", datos.nombre) == 1) {
+            fgets(buffer, 100, fd); sscanf(buffer, "Cantidad : %d", &datos.cantidad);
+            fgets(buffer, 100, fd); sscanf(buffer, "Precio : %f", &datos.precio);
+            fgets(buffer, 100, fd); // Leer la línea vacía
+            if (strcmp(datos.nombre, nombreProducto) != 0) {
+                fprintf(tempFd, "\nProducto : %s\nCantidad : %d\nPrecio : %.2f\n\n", datos.nombre, datos.cantidad, datos.precio);
+            } else {
+                encontrado = 1;  // Producto encontrado y omitido (no escrito en el archivo temporal)
+            }
+        }
+    }
+
+    fclose(fd);
+    fclose(tempFd);
+
+    remove(archivo);
+    rename(tempArchivo, archivo);
+
+    if (encontrado) {
+        printf("Producto eliminado con éxito.\n");
+    } else {
+        printf("Producto no encontrado.\n");
+    }
+}
+
+int main() {
+    int opc;
+
+    do {
+        printf("\n\t:::MENU:::\n");
+        printf("\n1) Crear inventario");
+        printf("\n2) Agregar más productos");
+        printf("\n3) Visualizar inventario");
+        printf("\n4) Eliminar un producto");
+        printf("\n5) Salir");
+        printf("\nOpción :");
+        scanf("%d", &opc);
+        getchar(); // Consumir el salto de línea restante
+
+        switch (opc) {
+            case 1: crear(); break;
+            case 2: agregar(); break;
+            case 3: visualizar(); break;
+            case 4: eliminar(); break;
+        }
+
+    } while (opc != 5);
+
+    return 0;
+}
